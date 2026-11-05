@@ -1,157 +1,147 @@
-@import "tailwindcss";
+import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n";
+import { waLink } from "@/lib/config";
+import { GlowBlob, Section, SectionHead } from "@/components/ui";
+import { IconClose, IconWhatsApp } from "@/components/Icons";
+import { WORK_IMAGES } from "@/lib/work-images";
+import { cn } from "@/utils/cn";
 
-@theme {
-  --font-sans: "Outfit", "Cairo", ui-sans-serif, system-ui, sans-serif;
-  --font-ar: "Cairo", "Outfit", ui-sans-serif, sans-serif;
+export default function Work() {
+  const { t } = useI18n();
+  const [filter, setFilter] = useState<string>("all");
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  --color-ink: #07070d;
-  --color-ink-2: #0c0c16;
-  --color-ink-3: #12121f;
-  --color-brand: #7c5cff;
-  --color-brand-2: #c05cff;
-  --color-brand-3: #22d3ee;
-  --color-gold: #ffc46b;
+  const cats = useMemo(
+    () => Array.from(new Set(t.work.items.map((i) => i.cat))),
+    [t.work.items],
+  );
 
-  --animate-float: float 7s ease-in-out infinite;
-  --animate-spin-slow: spin 18s linear infinite;
-  --animate-marquee: marquee 28s linear infinite;
-  --animate-pulse-ring: pulse-ring 2.2s ease-out infinite;
-  --animate-shine: shine 3.2s linear infinite;
-}
+  const items = t.work.items
+    .map((item, original) => ({ ...item, original }))
+    .filter((i) => filter === "all" || i.cat === filter);
 
-@keyframes float {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -18px, 0); }
-}
-@keyframes marquee {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-@keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.65; }
-  80%, 100% { transform: scale(1.7); opacity: 0; }
-}
-@keyframes shine {
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
+  const active = openIndex === null ? null : items[openIndex];
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent;
-  }
-  body {
-    background-color: var(--color-ink);
-    color: #e9e9f2;
-    font-family: var(--font-sans);
-    overflow-x: hidden;
-  }
-  html[lang="ar"] body,
-  html[dir="rtl"] body {
-    font-family: var(--font-ar);
-  }
-  ::selection {
-    background: var(--color-brand);
-    color: #fff;
-  }
-  h1, h2, h3, h4 {
-    text-wrap: balance;
-    line-height: 1.15;
-  }
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #0a0a12; }
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(var(--color-brand), var(--color-brand-2));
-    border-radius: 99px;
-    border: 2px solid #0a0a12;
-  }
-}
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenIndex(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
-@utility container-x {
-  width: 100%;
-  margin-inline: auto;
-  max-width: 82rem;
-  padding-inline: 1.25rem;
-}
+  useEffect(() => {
+    document.body.style.overflow = active ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [active]);
 
-@utility glass {
-  background: linear-gradient(150deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02));
-  border: 1px solid rgb(255 255 255 / 0.09);
-  backdrop-filter: blur(14px);
-}
+  return (
+    <Section id="work" className="bg-ink-2/40">
+      <GlowBlob className="bottom-10 start-1/4 h-80 w-80" color="bg-brand-3/12" />
+      <div className="container-x relative">
+        <SectionHead tag={t.work.tag} title={t.work.title} text={t.work.text} />
 
-@utility grad-text {
-  background: linear-gradient(100deg, #fff 0%, var(--color-brand-3) 38%, var(--color-brand) 62%, var(--color-brand-2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+        <div className="reveal mt-10 flex flex-wrap justify-center gap-2.5">
+          {[{ key: "all", label: t.work.all }, ...cats.map((c) => ({ key: c, label: t.work.cats[c as keyof typeof t.work.cats] }))].map(
+            (f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => {
+                  setFilter(f.key);
+                  setOpenIndex(null);
+                }}
+                className={cn(
+                  "rounded-full px-5 py-2.5 text-sm font-bold transition",
+                  filter === f.key
+                    ? "grad-brand text-white shadow-[0_14px_30px_-16px_rgba(124,92,255,0.9)]"
+                    : "border border-white/10 bg-white/5 text-white/60 hover:border-white/25 hover:text-white",
+                )}
+              >
+                {f.label}
+              </button>
+            ),
+          )}
+        </div>
 
-@utility grad-brand {
-  background-image: linear-gradient(120deg, var(--color-brand), var(--color-brand-2) 55%, var(--color-brand-3));
-}
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, i) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setOpenIndex(i)}
+              className="reveal group relative block overflow-hidden rounded-3xl border border-white/10 bg-ink-3 text-start card-hover"
+              style={{ ["--reveal-delay" as string]: `${i * 60}ms` }}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <img
+                  src={WORK_IMAGES[item.key]}
+                  alt={item.title}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.08]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-transparent opacity-90" />
+                <span className="absolute top-4 start-4 rounded-full border border-white/15 bg-ink/70 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-3 backdrop-blur">
+                  {t.work.cats[item.cat as keyof typeof t.work.cats]}
+                </span>
+                <span className="absolute bottom-4 end-4 inline-flex h-10 w-10 translate-y-3 items-center justify-center rounded-full grad-brand text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <IconClose className="h-4 w-4 rotate-45" />
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-base font-bold">{item.title}</h3>
+                <p className="mt-2 line-clamp-2 text-sm text-white/55">{item.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
-@utility ring-glow {
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 60px -24px rgb(124 92 255 / 0.65);
-}
-
-/* scroll reveal */
-.reveal {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform;
-}
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
-
-/* animated gradient border card */
-.card-hover {
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s, box-shadow 0.4s;
-}
-.card-hover:hover {
-  transform: translateY(-6px);
-  border-color: rgb(255 255 255 / 0.22);
-  box-shadow: 0 30px 60px -30px rgb(124 92 255 / 0.55);
-}
-
-.grain::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.35;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-}
-
-.shine-text {
-  background: linear-gradient(90deg, #fff, var(--color-gold), #fff);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: var(--animate-shine);
-}
-
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: var(--animate-marquee);
-}
-.marquee-wrap:hover .marquee-track {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  .reveal { opacity: 1; transform: none; }
+      {active && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/90 p-4 backdrop-blur-md"
+          onClick={() => setOpenIndex(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-ink-2 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setOpenIndex(null)}
+              aria-label={t.work.close}
+              className="absolute top-4 end-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-ink/70 text-white backdrop-blur transition hover:bg-white/15"
+            >
+              <IconClose className="h-5 w-5" />
+            </button>
+            <img
+              src={WORK_IMAGES[active.key]}
+              alt={active.title}
+              className="max-h-[62vh] w-full object-cover"
+            />
+            <div className="p-6">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-3">
+                {t.work.cats[active.cat as keyof typeof t.work.cats]}
+              </span>
+              <h3 className="mt-2 text-xl font-extrabold">{active.title}</h3>
+              <p className="mt-2 text-sm text-white/60">{active.desc}</p>
+              <a
+                href={waLink(`${t.contact.title}: ${active.title}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 text-sm font-bold text-[#062b16] transition hover:brightness-110"
+              >
+                <IconWhatsApp className="h-4 w-4" />
+                {t.services.order}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </Section>
+  );
 }
