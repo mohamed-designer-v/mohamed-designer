@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f2ede4;
+  --color-paper-2: #e8e0d2;
+  --color-paper-3: #dcd3c4;
+  --color-ink: #14110e;
+  --color-ink-soft: #2a251f;
+  --color-vermilion: #e23d1e;
+  --color-vermilion-dark: #b62c12;
+  --color-taupe: #6b6255;
+
+  --font-display: "Syne", "IBM Plex Sans Arabic", ui-sans-serif, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", "IBM Plex Sans", ui-sans-serif,
+    sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: var(--color-vermilion);
+    color: var(--color-paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-vermilion);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  /* Arabic is cursive: heavy tracking breaks letter joining */
+  [dir="rtl"] .label {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+    paint-order: stroke fill;
+  }
+  .text-outline-ink {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--color-ink);
+  }
+  .vert {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    opacity: 0.22;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size: 300px 300px;
+  }
+  .rule {
+    border-color: color-mix(in srgb, var(--color-ink) 18%, transparent);
+  }
+  .ink-fill {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .ink-fill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-vermilion);
+    transform: translateY(101%);
+    transition: transform 0.42s cubic-bezier(0.65, 0, 0.35, 1);
+    z-index: -1;
+  }
+  .ink-fill:hover::before,
+  .ink-fill:focus-visible::before {
+    transform: translateY(0);
+  }
+  .ink-fill:hover,
+  .ink-fill:focus-visible {
+    color: var(--color-ink);
+    border-color: var(--color-vermilion);
+  }
+}
+
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee-x 38s linear infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-stamp {
+  animation: spin-slow 26s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-marquee,
+  .animate-stamp {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
